@@ -15,7 +15,7 @@ extern "C" {
 }
 
 bool solved = false;
-std::atomic_uint next = 0;
+std::atomic_uint next;
 std::string input_file;
 unsigned length_limit;
 unsigned time_limit;
