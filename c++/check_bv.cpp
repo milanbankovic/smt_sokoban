@@ -264,6 +264,12 @@ bool check_plan(board & brd, const std::vector<unsigned> & moves)
       std::cout << "TABLE AFTER " << k + 1 << " MOVES: " << std::endl;
       std::cout << brd << std::endl;
     }
+
+  for(unsigned i = 0; i < brd.row_count; i++)
+    for(unsigned j = 0; j < brd.col_count; j++)
+      if(brd.home[brd.pair_to_index(i, j)] != brd.box[brd.pair_to_index(i,j)])
+	return false;
+  
   return true;
 }
 

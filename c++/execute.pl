@@ -4,23 +4,24 @@ use Time::HiRes qw(gettimeofday);
 
 if($#ARGV < 1)
 {
-  print "usage: $0 input_file limit\n";
+  print "usage: $0 input_file length_limit time_limit\n";
   exit;
 }
 
 $input_file = $ARGV[0];
-$limit = $ARGV[1];
+$length_limit = $ARGV[1];
+$time_limit = $ARGV[2];
 $found = 0;
 
 $start_time = Time::HiRes::gettimeofday();
 
 
-for($len = 0; $len <= $limit && $found == 0; $len++)
+for($len = 0; $len <= $length_limit && $found == 0; $len++)
 {
     $instance_start_time = Time::HiRes::gettimeofday();
     print "Length $len:\n";
     system("./generate_bv $input_file ${input_file}_${len}.smt2 $len 2> /dev/null");
-    system("./z3 ${input_file}_${len}.smt2 > ${input_file}_${len}.out 2> /dev/null");
+    system("./z3 -T:${time_limit} ${input_file}_${len}.smt2 > ${input_file}_${len}.out 2> /dev/null");
     open(RES, "${input_file}_${len}.out") or die "Cannot open ${input_file}_${len}.out\n";
 
     @content = <RES>;
@@ -29,6 +30,10 @@ for($len = 0; $len <= $limit && $found == 0; $len++)
     if($content =~ "unsat")
     {
 	print "No plan of length $len\n";
+    }
+    elsif($content =~ "timeout")
+    {
+	print "Time limit exceeded for length $len\n";
     }
     else
     {
