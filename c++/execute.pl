@@ -35,9 +35,9 @@ for($len = 0; $len <= $length_limit && $found == 0; $len++)
     {
 	print "Time limit exceeded for length $len\n";
     }
-    else
+    elsif($content =~ "sat")
     {
-	print "SUCCESS: Found plan of length: $len\n";
+	print "SUCCESS: Found plan of length $len\n";
 	print "Verifying solution...\n";
 	system("cat ${input_file}_${len}.out | grep -o -E '#b[0-1][0-1][0-1]?' > ${input_file}_${len}.moves");
 	system("./check_bv $input_file ${input_file}_${len}.moves > ${input_file}_${len}.res");
@@ -48,8 +48,10 @@ for($len = 0; $len <= $length_limit && $found == 0; $len++)
 	print "Instance time for length $len: ".$instance_time."s\n";
 	print "Cumulative time for length $len: ".$cumulative_time."s\n";	
     }
+    else
+    {
+	print "Internal error for length $len\n";
+    }
     unlink("${input_file}_${len}.smt2");
-    unlink("${input_file}_${len}.out");
-    unlink("${input_file}_${len}.moves");
 }
 

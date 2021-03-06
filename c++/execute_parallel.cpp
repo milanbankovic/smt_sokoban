@@ -53,8 +53,8 @@ void run(unsigned i)
 	std::string(" > ") + 
 	out_file +
 	std::string(" 2> /dev/null");
-
       system(command.c_str());
+      unlink(smt2_file.c_str());
 
       command = std::string("grep unsat ") +
 	out_file +
@@ -64,57 +64,63 @@ void run(unsigned i)
 
       if(WEXITSTATUS(retval) == 0)
 	{
-	  std::cout << "No plan of length " << k << std::endl;       	  
+	  std::cout << "No plan of length " << k << std::endl;
+	  continue;
 	}
-      else
+
+      command = std::string("grep timeout ") +
+	out_file +
+	std::string(" > /dev/null");
+	  	  
+      retval = system(command.c_str());
+      if(WEXITSTATUS(retval) == 0)
 	{
-	  command = std::string("grep timeout ") +
-	    out_file +
-	    std::string(" > /dev/null");
-
-	  retval = system(command.c_str());
-	  if(WEXITSTATUS(retval) == 0)
-	    {
-	      std::cout << "Time limit exceeded for length " << k << std::endl;
-	    }
-	  else
-	    {
-	      solved = true;
-	      std::cout << "SUCCESS: Found plan of length: " << k << std::endl;
-	      std::cout << "Verifying solution..." << std::endl;
-	      command = std::string("cat ") +
-		out_file +
-		std::string(" | grep -o -E '#b[0-1][0-1][0-1]?' > ") +
-		moves_file;
-	      system(command.c_str());
-	      command = std::string("./check_bv ") +
-		input_file +
-		std::string(" ") +
-		moves_file +
-		std::string(" > ") +
-		res_file;
-	      system(command.c_str());
-
-	      std::chrono::duration<double, std::ratio<1>> instance_time = std::chrono::system_clock::now() - instance_start_time;
-	      std::chrono::duration<double, std::ratio<1>> cumulative_time = std::chrono::system_clock::now() - start_time;
-
-	      std::ofstream ostr(res_file, std::ios_base::app);
-
-	      if(ostr)
-		{
-		  ostr << std::endl;
-		  ostr << "Instance time for length " << k << ": " << instance_time.count() << "s" << std::endl;
-		  ostr << "Cumulative time for length " << k << ": " << cumulative_time.count() << "s" << std::endl;
-		}
-
-	      ostr.close();
-	      std::cout << "Instance time for length " << k << ": " << instance_time.count() << "s" << std::endl;
-	      std::cout << "Cumulative time for length " << k << ": " << cumulative_time.count() << "s" <<  std::endl;  
-	    }
+	  std::cout << "Time limit exceeded for length " << k << std::endl;
+	  continue;
 	}
-      unlink(smt2_file.c_str());
-      unlink(out_file.c_str());
-      unlink(moves_file.c_str());
+
+      command = std::string("grep sat ") +
+	out_file +
+	std::string(" > /dev/null");
+
+      retval = system(command.c_str());
+      if(WEXITSTATUS(retval) != 0)
+	{
+	  std::cout << "Internal error for length " << k << std::endl;
+	  continue;
+	}
+      
+      solved = true;
+      std::cout << "SUCCESS: Found plan of length: " << k << std::endl;
+      std::cout << "Verifying solution..." << std::endl;
+      command = std::string("cat ") +
+	out_file +
+	std::string(" | grep -o -E '#b[0-1][0-1][0-1]?' > ") +
+	moves_file;
+      system(command.c_str());
+      command = std::string("./check_bv ") +
+	input_file +
+	std::string(" ") +
+	moves_file +
+	std::string(" > ") +
+	res_file;
+      system(command.c_str());
+
+      std::chrono::duration<double, std::ratio<1>> instance_time = std::chrono::system_clock::now() - instance_start_time;
+      std::chrono::duration<double, std::ratio<1>> cumulative_time = std::chrono::system_clock::now() - start_time;
+
+      std::ofstream ostr(res_file, std::ios_base::app);
+
+      if(ostr)
+	{
+	  ostr << std::endl;
+	  ostr << "Instance time for length " << k << ": " << instance_time.count() << "s" << std::endl;
+	  ostr << "Cumulative time for length " << k << ": " << cumulative_time.count() << "s" << std::endl;
+	}
+
+      ostr.close();
+      std::cout << "Instance time for length " << k << ": " << instance_time.count() << "s" << std::endl;
+      std::cout << "Cumulative time for length " << k << ": " << cumulative_time.count() << "s" <<  std::endl;      
     }
 }
 
